@@ -1,0 +1,34 @@
+{
+    "name": "imsvr",
+    "version": "0.0.1",
+    "description": "chatting room via socket.io.pre2",
+    "main": "chat.js",
+    "scripts": {
+	"test" : "NODE_ENV=test DEBUG=engine:*,Chat:*,socket.io:* mocha -R spec test/*.test.js",
+	"start" : "NODE_ENV=development DEBUG=Chat:* node chat.js"
+    },
+    "dependencies" : {
+	"express" : "3.4.8",
+	"socket.io" : "1.0.0-pre2",
+	"socket.io-client" : "1.0.0-pre2",
+	"socket.io-redis" : "0.1.1",
+	"async" : "0.8.0",
+  "redis" : "0.10.1",
+	"debug" : "0.8.1"
+    },
+    "devDependencies" : {
+	"mocha" : "1.16.2",
+	"should" : "3.3.1",
+	"supertest" : "0.8.2",
+	"should" : "3.3.1",
+	"json-mask" : "0.2.0"
+	
+    },
+    "keywords": [
+	"imsvr",
+	"chat",
+	"socket.io"
+    ],
+    "author": "luckyan315",
+    "license": "MIT"
+}
