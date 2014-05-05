@@ -106,6 +106,12 @@ io.on('error', function(err){
 process.on('uncaughtException', function(err) {
   debug(err);
   debug(err.stack);
+
+  // cleanup session, quit elegantly
+  this.redisClients.forEach(function(client){
+    client.quit();
+  });
+
   throw err;
 });
 
