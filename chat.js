@@ -24,10 +24,16 @@
 
  var redisClients = [];
  var io = exports.io = 
- require('socket.io')(httpServer, { adapter: redisAdapter({ pubClient: pub, subclient: sub }) });
+ require('socket.io')(httpServer, 
+  { 
+    host : 'localhost',
+    port : 6379,
+    key : 'wkrldi',
+    adapter: redisAdapter({ pubClient: pub, subclient: sub })
+  });
  redisClients.push(pub, sub);
 
- var room = 'baywalk';
+ var myroom = 'baywalk';
 
  app.use(express.static(__dirname + '/public'));
 
@@ -60,14 +66,22 @@ io.use(function(socket, next){
 io.on('connection', function(socket) {
   debug('New client is connected...');
 
+  socket.on('join room', function(room, cb){
+    debug('user: ' + socket.id + ' joinRoom....:' + room);
+    socket.join(room, cb);
+  });
+
+  socket.on('broadcast room', function(room_name, msg){
+    broadcast_socket(socket, room_name, msg);
+  });
+
   socket.on('disconnect', function(){
     debug('A client disconnected...');
   });
 });
 
 io.of('/user').on('connection', function(socket){
-  socket.join(room);
-
+  
   var io_socket_field = 'rooms,id';
   debug(JSON.stringify(jsmask(socket, io_socket_field)));
   
@@ -79,15 +93,13 @@ io.of('/user').on('connection', function(socket){
   //for testt
   socket.on('new message', function(data){
     debug('' , '[Chat][sayall] ' + data);
-
-    broadcast1(data);
+    broadcast_namespace(data); 
   });  
 });
 
 io.of('/private').on('connection', function(socket){
   debug(socket.nsp.name + ' a client is connected!');
   debug('[uuid] ', socket.request.uuid);
-  socket.join(room);
 
   var io_socket_field = 'rooms,id';
   debug(JSON.stringify(jsmask(socket, io_socket_field)));
@@ -112,9 +124,15 @@ process.on('uncaughtException', function(err) {
   throw err;
 });
 
-function broadcast1(data){
+function broadcast_namespace(data){
   //broadcast via namespaces
   Object.keys(io.nsps).forEach(function(key){
     io.of(key).emit('new message', data);
   });  
+}
+
+function broadcast_socket(socket, room, data){
+  debug('[broadcast2] [rooooooms] ', socket.rooms);
+  debug('[broadcast2] ['+ room +']......')
+  socket.broadcast.to(room).emit('new message', data);
 }

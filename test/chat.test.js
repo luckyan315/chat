@@ -135,5 +135,37 @@
     };
   });
 
-  
+  it('should sio sockets broadcast ok', function(done){
+    var user1 = ioc(address, { multiplex: false });
+    var user2 = ioc(address, { multiplex: false });
+    var user3 = ioc(address, { multiplex: false });
+    var room_name = 'baywalk';
+    var nRecv = 0;
+
+    user1.on('new message', function(data){
+      debug('[user1] recv msg: ' + data);
+      nRecv++;
+      if (nRecv === 2) done();
+    });
+
+    user2.on('new message', function(data){
+      debug('[user2] recv msg: ' + data);
+      nRecv++;
+      if (nRecv === 2) done();      
+    });
+
+    user3.on('new message', function(data){
+      debug('[user3] recv msg: ' + data);
+      done(new Error('Should not recv msg by self'));
+    });
+
+
+    user1.emit('join room', room_name);
+    user2.emit('join room', room_name);
+    user3.emit('join room', room_name, function(){
+      user3.emit('broadcast room', room_name, 'hi all');
+    });
+
+        
+  });
 });
