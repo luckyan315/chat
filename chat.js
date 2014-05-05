@@ -67,8 +67,13 @@ io.on('connection', function(socket) {
   debug('New client is connected...');
 
   socket.on('join room', function(room, cb){
-    debug('user: ' + socket.id + ' joinRoom....:' + room);
+    debug('user: ' + socket.id + ' Join Room....:' + room);
     socket.join(room, cb);
+  });
+
+  socket.on('leave room', function(room, cb){
+    debug('user: ' + socket.id + ' Leave Room....:' + room);
+    socket.leave(room, cb);
   });
 
   socket.on('broadcast room', function(room_name, msg){
@@ -117,7 +122,7 @@ process.on('uncaughtException', function(err) {
   debug(err.stack);
 
   // cleanup session, quit elegantly
-  this.redisClients.forEach(function(client){
+  redisClients.forEach(function(client){
     client.quit();
   });
 

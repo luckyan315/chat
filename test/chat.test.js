@@ -166,6 +166,22 @@
       user3.emit('broadcast room', room_name, 'hi all');
     });
 
-        
+  });
+
+  it.only('should add/leave room ok', function(done){
+    var user1 = ioc(address, { multiplex: false });
+    var user2 = ioc(address, { multiplex: false });
+    var user3 = ioc(address, { multiplex: false });
+    var room_name = 'baywalk';
+    var nUsers = 0;
+
+    user1.emit('join room', room_name, function(){ ++nUsers; });
+    user2.emit('join room', room_name, function(){ ++nUsers; });
+    user3.emit('join room', room_name, function(){ ++nUsers; });
+
+    user1.emit('leave room', room_name, function(){ --nUsers; 
+      debug('[io.sockets]', io.sockets.sockets.length);
+      done();
+    });
   });
 });
