@@ -4,44 +4,45 @@
  * 
  */
 
- "use strict";
+"use strict";
 
- var express = require('express');
- var debug = require('debug')('Chat:app');
- var config = require('./config');
- var port = config.dev.port;
+var express = require('express');
+var debug = require('debug')('Chat:app');
+var config = require('./config');
+var port = config.dev.port;
 
- var jsmask = require('json-mask');
+var jsmask = require('json-mask');
 
- var app = exports.app = express();
- var http = require('http');
- var httpServer = exports.httpServer = http.createServer(app);
+var app = exports.app = express();
+var http = require('http');
+var httpServer = exports.httpServer = http.createServer(app);
 
- var redis = require('redis');
- var pub = redis.createClient();
- var sub = redis.createClient(null, null, {detect_buffers: true});
- var redisAdapter = require('socket.io-redis'); 
+var redis = require('redis');
+var pub = redis.createClient();
+var sub = redis.createClient(null, null, {detect_buffers: true});
+var redisAdapter = require('socket.io-redis'); 
 
- var redisClients = [];
- var io = exports.io = 
- require('socket.io')(httpServer, 
-  { 
-    host : 'localhost',
-    port : 6379,
-    key : 'wkrldi',
-    adapter: redisAdapter({ pubClient: pub, subclient: sub })
-  });
- redisClients.push(pub, sub);
+var redisClients = [];
+    var io = exports.io = 
+  require('socket.io')(
+    httpServer, 
+    { 
+      host : 'localhost',
+      port : 6379,
+      key : 'wkrldi',
+      adapter: redisAdapter({ pubClient: pub, subclient: sub })
+    });
+redisClients.push(pub, sub);
 
- var myroom = 'baywalk';
+var myroom = 'baywalk';
 
- app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/public'));
 
- app.get('/', function(req, res){
+app.get('/', function(req, res){
   res.send('Hello World');
 });
 
- if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test') {
   httpServer.listen(port, function(){
     debug('Chatting server is listening port on %d', port);
   });
