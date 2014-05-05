@@ -4,26 +4,30 @@
  * 
  */
 
- "use strict";
+"use strict";
 
- var should = require('should');
- var request = require('supertest');
- var http = require('http');
- var ioc = require('socket.io-client');
- var debug = require('debug')('Chat:ServerTest');
+var should = require('should');
+var request = require('supertest');
+var http = require('http');
+var ioc = require('socket.io-client');
 
- var chat = require('../chat.js');
- var app = chat.app;
- var io = chat.io;
- var httpServer = chat.httpServer;
+var debug = require('debug')('Chat:ServerTest');
+var _ = require('lodash');
 
- var config = require('../config');
- var host = config.test.host;
- var port = config.test.port;
+var chat = require('../chat.js');
+var app = chat.app;
+var io = chat.io;
+var httpServer = chat.httpServer;
 
- describe('Chat Server', function(){
+var config = require('../config');
+var host = config.test.host;
+var port = config.test.port;
+
+describe('Chat Server', function(){
   var server = null;
   var address = 'ws://' + host + ':' + port;
+  var room_name = 'baywalk';
+
   debug('[address]: ' + address);
   
   beforeEach(function(done){
@@ -32,30 +36,37 @@
       done(err);
     });
   });
+
+  afterEach(function(){
+    //io.sockets -> the io.of('/')
+    io.sockets.sockets.forEach(function(socket){
+      socket.leave(room_name);
+    });
+  });
   
   it('should got 200 status code when visit get /', function(done){
     request(app)
-    .get('/')
-    .expect(200, done);
+      .get('/')
+      .expect(200, done);
   });
 
   it('should work as a static server', function(done){
     request(app)
-    .get('/index.html')
-    .expect(200, done);
+      .get('/index.html')
+      .expect(200, done);
   });
 
   it('should "Not Found(404)"if there is not static file', function(done){
     request(app)
-    .get('/xxx.html')
-    .expect(404)
-    .end(function(err, res){
-      done();
-    });
+      .get('/xxx.html')
+      .expect(404)
+      .end(function(err, res){
+        done();
+      });
   });
   
   it('should connect the server success', function(done){
-    var sockets = ioc(address);
+        var sockets = ioc(address);
     sockets.on('connect', function(client){
       io.eio.clientsCount.should.eql(1);
       done();
@@ -68,7 +79,7 @@
   });
 
   it('should access /private ', function(done){
-    var pri_socket = ioc(address + '/private', { multiplex: false });
+        var pri_socket = ioc(address + '/private', { multiplex: false });
 
     pri_socket.on('connect', function(){
       debug('successfully established a connection with the namespace');
@@ -139,7 +150,6 @@
     var user1 = ioc(address, { multiplex: false });
     var user2 = ioc(address, { multiplex: false });
     var user3 = ioc(address, { multiplex: false });
-    var room_name = 'baywalk';
     var nRecv = 0;
 
     user1.on('new message', function(data){
@@ -168,20 +178,34 @@
 
   });
 
-  it.only('should add/leave room ok', function(done){
+  it('should add/leave room ok', function(done){
     var user1 = ioc(address, { multiplex: false });
     var user2 = ioc(address, { multiplex: false });
     var user3 = ioc(address, { multiplex: false });
-    var room_name = 'baywalk';
     var nUsers = 0;
+    
+    user1.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
+    user2.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
+    user3.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
 
-    user1.emit('join room', room_name, function(){ ++nUsers; });
-    user2.emit('join room', room_name, function(){ ++nUsers; });
-    user3.emit('join room', room_name, function(){ ++nUsers; });
+    function user_leave(){
+      debug('one user leaving the room....' + room_name);
 
-    user1.emit('leave room', room_name, function(){ --nUsers; 
-      debug('[io.sockets]', io.sockets.sockets.length);
-      done();
-    });
+      user1.emit('leave room', room_name, function(){
+        --nUsers;
+            var sids = io.sockets.adapter.sids;
+        debug('[adapter.sids]: ', sids);
+
+            var nLeftRoom = _.reduce(sids, function(result, num, key){
+              debug('[ sids[key] ]', sids[key]);
+              debug('[ result ]: ', result);
+              if(sids[key][room_name] === true) result++;
+              return result;
+            }, 0);
+        
+        debug('[nLeftRoom]: ' + nLeftRoom + ' [nUsers]: ' + nUsers);
+        if (nLeftRoom === nUsers) done();
+      });
+    }
   });
 });
