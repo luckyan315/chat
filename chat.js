@@ -77,13 +77,10 @@ io.of('/user').on('connection', function(socket){
   });
 
   //for testt
-  socket.on('sayall', function(data){
+  socket.on('new message', function(data){
     debug('' , '[Chat][sayall] ' + data);
 
-    //broadcast via namespaces
-    Object.keys(io.nsps).forEach(function(key){
-      io.of(key).emit('new_message', data);
-    });
+    broadcast1(data);
   });  
 });
 
@@ -115,3 +112,9 @@ process.on('uncaughtException', function(err) {
   throw err;
 });
 
+function broadcast1(data){
+  //broadcast via namespaces
+  Object.keys(io.nsps).forEach(function(key){
+    io.of(key).emit('new message', data);
+  });  
+}

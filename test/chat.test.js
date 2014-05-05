@@ -102,7 +102,7 @@
     pri_socket.on('connect', function(){
       nConn++;
 
-      pri_socket.on('new_message', function(data){
+      pri_socket.on('new message', function(data){
         if(data === 'hi') nRecvCnt++;
         debug('', '[ioc] recv msg nRecvCnt: ' + nRecvCnt);
 
@@ -117,7 +117,7 @@
     user_socket.on('connect', function(){
       nConn++;
 
-      user_socket.on('new_message', function(data){
+      user_socket.on('new message', function(data){
         if(data === 'hi') nRecvCnt++;
         debug('', '[ioc] recv msg nRecvCnt: ' + nRecvCnt);
 
@@ -131,7 +131,7 @@
 
     function user_ns_send(){
       debug('', 'client emit sayall hi');
-      user_socket.emit('sayall', 'hi');
+      user_socket.emit('new message', 'hi');
     };
   });
 
