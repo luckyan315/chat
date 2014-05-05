@@ -178,7 +178,7 @@ describe('Chat Server', function(){
 
   });
 
-  it('should add/leave room ok', function(done){
+  it.only('should add/leave room ok', function(done){
     var user1 = ioc(address, { multiplex: false });
     var user2 = ioc(address, { multiplex: false });
     var user3 = ioc(address, { multiplex: false });
@@ -198,8 +198,9 @@ describe('Chat Server', function(){
 
             var nLeftRoom = _.reduce(sids, function(result, num, key){
               debug('[ sids[key] ]', sids[key]);
-              debug('[ result ]: ', result);
               if(sids[key][room_name] === true) result++;
+
+              debug('[ result ]: ', result);
               return result;
             }, 0);
         
