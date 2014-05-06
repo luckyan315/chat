@@ -41,9 +41,19 @@ describe('Chat Server', function(){
     //sio.sockets -> the sio.of('/')
     sio.sockets.sockets.forEach(function(socket){
       debug(socket.id + ' is going to leaving all rooms');
-
       socket.leaveAll();
     });
+
+    //clean namespaces sessions
+    _.forEach(sio.nsps, function(nsp){
+      if (nsp.name === '/') return;
+
+      nsp.sockets.forEach(function(socket){
+        debug(socket.id + ' is going to be disconnected by sio...');
+        socket.disconnect(true);
+      });
+    });
+
   });
   
   it('should got 200 status code when visit get /', function(done){
@@ -107,24 +117,58 @@ describe('Chat Server', function(){
     })
   });
 
+  it('should sio broadcast specified namespace sockets', function(done){
+    var user1_socket = ioc(address + '/user', { multiplex: false });
+    var user2_socket = ioc(address + '/user', { multiplex: false });
+    var pri_socket = ioc(address + '/private', { multiplex: false });
+    var nRecv = 0;
+    var nExp = 2;
+    var bEmitted = false;
+
+    pri_socket.on('new message', function(data){
+      done(new Error('/private should not recv msg!! ' + data));
+    });
+
+    user2_socket.on('new message', function(data){
+      nRecv++;
+
+      debug('', '[ioc] [user2] recv msg nRecv: ' + nRecv);
+      if (nRecv === nExp) done();
+    });
+
+    user1_socket.on('new message', function(data){
+      nRecv++;
+
+      debug('', '[ioc] [user1] recv msg nRecv: ' + nRecv);
+      if (nRecv === nExp) done();
+    });
+
+    sio.of('/user').on('connection', function(socket){
+      if (bEmitted) return;
+      debug('', 'a client connectted ...id: ' + socket.id);
+      user1_socket.emit('broadcast namespace', 'hi all in ns:' + ' /user', '/user');
+      bEmitted = true;
+    });
+  });
+
   it('should sio broadcast all namespace ok', function(done){
     var user_socket = ioc(address + '/user', { multiplex: false });
     var pri_socket = ioc(address + '/private', { multiplex: false });
-    var nRecvCnt = 0;
+    var nRecv = 0;
     var nExp = 2; // expect result
 
     pri_socket.on('new message', function(data){
-      nRecvCnt++;
+      nRecv++;
 
-      debug('', '[ioc] recv msg nRecvCnt: ' + nRecvCnt);
-      if(nRecvCnt === nExp) done();
+      debug('', '[ioc] recv msg nRecv: ' + nRecv);
+      if(nRecv === nExp) done();
     });
 
     user_socket.on('new message', function(data){
-      nRecvCnt++;
+      nRecv++;
 
-      debug('', '[ioc] recv msg nRecvCnt: ' + nRecvCnt);
-      if(nRecvCnt === nExp) done();
+      debug('', '[ioc] recv msg nRecv: ' + nRecv);
+      if(nRecv === nExp) done();
     });
 
     sio.of('/user').on('connection', function(socket){

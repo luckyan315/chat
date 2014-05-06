@@ -97,7 +97,6 @@ io.of('/user').on('connection', function(socket){
   });
 
   socket.on('broadcast namespace', function(msg, ns){
-    debug('---------------------');
     broadcast_namespace(msg, ns);
   });
 
