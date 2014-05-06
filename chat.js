@@ -78,7 +78,7 @@ io.on('connection', function(socket) {
   });
 
   socket.on('broadcast room', function(room_name, msg){
-    broadcast_socket(socket, room_name, msg);
+    broadcast_socket(socket, msg, room_name);
   });
 
   socket.on('disconnect', function(){
@@ -137,7 +137,10 @@ function broadcast_namespace(data){
   });  
 }
 
-function broadcast_socket(socket, room, data){
+function broadcast_socket(socket, data, room){
+  if (!room)
+    return socket.broadcast.emit('new message', data);
+
   debug('[broadcast2] [rooooooms] ', socket.rooms);
   debug('[broadcast2] ['+ room +']......')
   socket.broadcast.to(room).emit('new message', data);

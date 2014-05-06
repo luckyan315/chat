@@ -173,12 +173,12 @@ describe('Chat Server', function(){
     user1.emit('join room', room_name);
     user2.emit('join room', room_name);
     user3.emit('join room', room_name, function(){
-      user3.emit('broadcast room', room_name, 'hi all');
+      user3.emit('broadcast room', null, 'hi all');
     });
 
   });
 
-  it.only('should add/leave room ok', function(done){
+  it('should add/leave room ok', function(done){
     var user1 = ioc(address, { multiplex: false });
     var user2 = ioc(address, { multiplex: false });
     var user3 = ioc(address, { multiplex: false });
