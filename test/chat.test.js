@@ -184,25 +184,35 @@ describe('Chat Server', function(){
     var user1 = ioc(address, { multiplex: false });
     var user2 = ioc(address, { multiplex: false });
     var user3 = ioc(address, { multiplex: false });
+    var user4 = ioc(address, { multiplex: false });
     var nRecv = 0;
+    var nExp = 3; //expect result
 
     user1.on('new message', function(data){
       debug('[user1] recv msg: ' + data);
       nRecv++;
-      if (nRecv === 2) done();
+      if (nRecv === nExp) done();
     });
 
     user2.on('new message', function(data){
       debug('[user2] recv msg: ' + data);
       nRecv++;
-      if (nRecv === 2) done();
+      if (nRecv === nExp) done();
     });
 
     user3.on('new message', function(data){
       debug('[user3] recv msg: ' + data);
       done(new Error('Should not recv msg by self'));
     });
-  
+
+    // Not join a specified room, just default room
+    // should also recv the broadcast msg
+    user4.on('new message', function(data){
+      debug('[user4] recv msg: ' + data);
+      nRecv++;
+      if (nRecv === nExp) done();
+    });
+
     user1.emit('join room', 'room1');
     user2.emit('join room', 'room2');
     user3.emit('join room', 'room3', function(){
