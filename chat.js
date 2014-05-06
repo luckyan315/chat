@@ -51,7 +51,7 @@ if (process.env.NODE_ENV !== 'test') {
 io.use(function(socket, next){
   var socket_req_field = 'headers(host),url,method,_query';
   var handshakeData = socket.request;
-  debug('Messages from HandshakeData:\n', jsmask(handshakeData, socket_req_field));
+  // debug('Messages from HandshakeData:\n', jsmask(handshakeData, socket_req_field));
 
   // do some authorization...
   if(!handshakeData.uuid){
@@ -77,7 +77,7 @@ io.on('connection', function(socket) {
     socket.leave(room, cb);
   });
 
-  socket.on('broadcast room', function(room_name, msg){
+  socket.on('broadcast room', function(msg, room_name){
     broadcast_socket(socket, msg, room_name);
   });
 

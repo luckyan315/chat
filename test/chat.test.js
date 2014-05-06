@@ -40,7 +40,9 @@ describe('Chat Server', function(){
   afterEach(function(){
     //io.sockets -> the io.of('/')
     io.sockets.sockets.forEach(function(socket){
-      socket.leave(room_name);
+      debug(socket.id + ' is going to leaving all rooms');
+
+      socket.leaveAll();
     });
   });
   
@@ -146,7 +148,7 @@ describe('Chat Server', function(){
     };
   });
 
-  it('should sio sockets broadcast ok', function(done){
+  it('should sio sockets broadcast a specified room ok', function(done){
     var user1 = ioc(address, { multiplex: false });
     var user2 = ioc(address, { multiplex: false });
     var user3 = ioc(address, { multiplex: false });
@@ -173,10 +175,41 @@ describe('Chat Server', function(){
     user1.emit('join room', room_name);
     user2.emit('join room', room_name);
     user3.emit('join room', room_name, function(){
-      user3.emit('broadcast room', null, 'hi all');
+      user3.emit('broadcast room', 'hi all', room_name);
     });
 
   });
+
+  it('should sio sockets broadcast multi-room', function(done){
+    var user1 = ioc(address, { multiplex: false });
+    var user2 = ioc(address, { multiplex: false });
+    var user3 = ioc(address, { multiplex: false });
+    var nRecv = 0;
+
+    user1.on('new message', function(data){
+      debug('[user1] recv msg: ' + data);
+      nRecv++;
+      if (nRecv === 2) done();
+    });
+
+    user2.on('new message', function(data){
+      debug('[user2] recv msg: ' + data);
+      nRecv++;
+      if (nRecv === 2) done();
+    });
+
+    user3.on('new message', function(data){
+      debug('[user3] recv msg: ' + data);
+      done(new Error('Should not recv msg by self'));
+    });
+  
+    user1.emit('join room', 'room1');
+    user2.emit('join room', 'room2');
+    user3.emit('join room', 'room3', function(){
+      user3.emit('broadcast room', 'hi all');
+    });
+
+  })
 
   it('should add/leave room ok', function(done){
     var user1 = ioc(address, { multiplex: false });
@@ -197,10 +230,10 @@ describe('Chat Server', function(){
         debug('[adapter.sids]: ', sids);
 
             var nLeftRoom = _.reduce(sids, function(result, num, key){
-              debug('[ sids[key] ]', sids[key]);
+              // debug('[ sids[key] ]', sids[key]);
               if(sids[key][room_name] === true) result++;
 
-              debug('[ result ]: ', result);
+              // debug('[ result ]: ', result);
               return result;
             }, 0);
         
