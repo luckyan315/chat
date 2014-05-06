@@ -90,15 +90,19 @@ io.of('/user').on('connection', function(socket){
   
   var io_socket_field = 'rooms,id';
   debug(JSON.stringify(jsmask(socket, io_socket_field)));
-  
+
   // todo: public user api
   socket.on('add', function(){
     socket.emit('user_added');
   });
 
+  socket.on('broadcast namespace', function(msg, ns){
+    debug('---------------------');
+    broadcast_namespace(msg, ns);
+  });
+
   //for testt
   socket.on('new message', function(data){
-    debug('' , '[Chat][sayall] ' + data);
     broadcast_namespace(data); 
   });  
 });
@@ -130,11 +134,16 @@ process.on('uncaughtException', function(err) {
   throw err;
 });
 
-function broadcast_namespace(data){
-  //broadcast via namespaces
+function broadcast_namespace(data, ns){
+  if (ns) {
+    debug('broadcasting namespace .... ' + ns);
+    return io.of(ns).emit('new message', data);
+  }
+
   Object.keys(io.nsps).forEach(function(key){
+    debug('iter broadcasting namespace .... ' + key);
     io.of(key).emit('new message', data);
-  });  
+  });
 }
 
 function broadcast_socket(socket, data, room){

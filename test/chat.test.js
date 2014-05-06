@@ -16,7 +16,7 @@ var _ = require('lodash');
 
 var chat = require('../chat.js');
 var app = chat.app;
-var io = chat.io;
+var sio = chat.io;
 var httpServer = chat.httpServer;
 
 var config = require('../config');
@@ -38,8 +38,8 @@ describe('Chat Server', function(){
   });
 
   afterEach(function(){
-    //io.sockets -> the io.of('/')
-    io.sockets.sockets.forEach(function(socket){
+    //sio.sockets -> the sio.of('/')
+    sio.sockets.sockets.forEach(function(socket){
       debug(socket.id + ' is going to leaving all rooms');
 
       socket.leaveAll();
@@ -68,9 +68,10 @@ describe('Chat Server', function(){
   });
   
   it('should connect the server success', function(done){
-        var sockets = ioc(address);
+
+    var sockets = ioc(address);
     sockets.on('connect', function(client){
-      io.eio.clientsCount.should.eql(1);
+      sio.eio.clientsCount.should.eql(1);
       done();
     });
 
@@ -81,7 +82,7 @@ describe('Chat Server', function(){
   });
 
   it('should access /private ', function(done){
-        var pri_socket = ioc(address + '/private', { multiplex: false });
+    var pri_socket = ioc(address + '/private', { multiplex: false });
 
     pri_socket.on('connect', function(){
       debug('successfully established a connection with the namespace');
@@ -106,46 +107,30 @@ describe('Chat Server', function(){
     })
   });
 
-  it('should sio namespace broadcast ok', function(done){
+  it('should sio broadcast all namespace ok', function(done){
     var user_socket = ioc(address + '/user', { multiplex: false });
     var pri_socket = ioc(address + '/private', { multiplex: false });
     var nRecvCnt = 0;
-    var nConn = 0;
+    var nExp = 2; // expect result
 
-    pri_socket.on('connect', function(){
-      nConn++;
+    pri_socket.on('new message', function(data){
+      nRecvCnt++;
 
-      pri_socket.on('new message', function(data){
-        if(data === 'hi') nRecvCnt++;
-        debug('', '[ioc] recv msg nRecvCnt: ' + nRecvCnt);
-
-        if(nRecvCnt === 2){
-          done();
-        }
-      });
-
-      if(nConn === 2) user_ns_send();
+      debug('', '[ioc] recv msg nRecvCnt: ' + nRecvCnt);
+      if(nRecvCnt === nExp) done();
     });
 
-    user_socket.on('connect', function(){
-      nConn++;
+    user_socket.on('new message', function(data){
+      nRecvCnt++;
 
-      user_socket.on('new message', function(data){
-        if(data === 'hi') nRecvCnt++;
-        debug('', '[ioc] recv msg nRecvCnt: ' + nRecvCnt);
-
-        if(nRecvCnt === 2){
-          done();
-        }
-      });
-
-      if (nConn === 2) user_ns_send();
+      debug('', '[ioc] recv msg nRecvCnt: ' + nRecvCnt);
+      if(nRecvCnt === nExp) done();
     });
 
-    function user_ns_send(){
-      debug('', 'client emit sayall hi');
-      user_socket.emit('new message', 'hi');
-    };
+    sio.of('/user').on('connection', function(socket){
+      user_socket.emit('broadcast namespace', 'hi all namespace');
+    });
+
   });
 
   it('should sio sockets broadcast a specified room ok', function(done){
@@ -175,7 +160,7 @@ describe('Chat Server', function(){
     user1.emit('join room', room_name);
     user2.emit('join room', room_name);
     user3.emit('join room', room_name, function(){
-      user3.emit('broadcast room', 'hi all', room_name);
+      user3.emit('broadcast room', 'hi all room', room_name);
     });
 
   });
@@ -236,7 +221,7 @@ describe('Chat Server', function(){
 
       user1.emit('leave room', room_name, function(){
         --nUsers;
-            var sids = io.sockets.adapter.sids;
+        var sids = sio.sockets.adapter.sids;
         debug('[adapter.sids]: ', sids);
 
             var nLeftRoom = _.reduce(sids, function(result, num, key){
