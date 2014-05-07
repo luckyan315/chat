@@ -96,8 +96,9 @@ io.of('/user').on('connection', function(socket){
 
   socket.on('add', function(username, cb){
     if(!socket.username) {
+      nUsers++;
       socket.username = username;
-      return cb && cb(null, 'add success');
+      return cb && cb(null, '[user]:' +  username + ' add success');
     }
     cb && cb('user added');
   });

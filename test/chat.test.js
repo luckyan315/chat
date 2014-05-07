@@ -10,6 +10,7 @@ var should = require('should');
 var request = require('supertest');
 var http = require('http');
 var ioc = require('socket.io-client');
+var async = require('async');
 
 var debug = require('debug')('Chat:ServerTest');
 var _ = require('lodash');
@@ -107,13 +108,18 @@ describe('Chat Server', function(){
 
   it('should do add action via /user namespace', function(done){
     var user_socket = ioc(address + '/user', {multiplex: false});
-
+    var bEmitted = false;
+    
     user_socket.on('connect', function(){
+      if(bEmitted) return;
       user_socket.emit('add', 'angl', function(err, data){
-        if (err) return done(err);
+        bEmitted = true;
+        if (err) throw new Error(err);
+        debug('--------------------', data);
         //emit once more
-        user_socket.emit('add', 'angl', function(err, data){
+        return user_socket.emit('add', 'angl', function(err, data){
           if (err) {
+            debug('', 'xxxxxxxxxxxxxxxxxxxxx', err, data);
             return done();
           }
         });
@@ -293,4 +299,38 @@ describe('Chat Server', function(){
       });
     }
   });
+
+  it('should add multi users', function(done) {
+    var user1 = ioc(address + '/user', { multiplex: false });
+    var user2 = ioc(address + '/user', { multiplex: false });
+    var user3 = ioc(address + '/user', { multiplex: false });
+    var bEmitted = false;
+
+    sio.of('/user').on('connection', function(){
+      if (bEmitted) return;
+      async.series({
+        one: function(cb){
+          user1.emit('add', 'user1', function(err, data){
+            bEmitted = true;
+            cb(err, data);
+          });
+        },
+        two: function(cb){
+          user2.emit('add', 'user2', function(err, data){
+            cb(err, data);
+          });
+        },
+        three: function(cb){
+          user3.emit('add', 'user3', function(err, data){
+            cb(err, data);
+          });
+        }
+      }, function(err, result){
+        if(!err) done();
+      });      
+    });
+
+    
+  });
+
 });
