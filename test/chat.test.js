@@ -146,7 +146,14 @@ describe('Chat Server', function(){
     sio.of('/user').on('connection', function(socket){
       if (bEmitted) return;
       debug('', 'a client connectted ...id: ' + socket.id);
-      user1_socket.emit('broadcast namespace', 'hi all in ns:' + ' /user', '/user');
+
+      // client another namespace braodcasting....
+      // in this case, other namespaces should not recv any msg.
+      // pri_socket.emit('broadcast namespace', 'this is in /private ns, hi all in /user', '/user');
+
+      // client broadcast by self namespace      
+      user1_socket.emit('broadcast namespace', 'this is a client in /user ns, hi all in ns:' + ' /user', '/user');
+
       bEmitted = true;
     });
   });
