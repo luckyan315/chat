@@ -108,12 +108,17 @@ describe('Chat Server', function(){
   it('should do add action via /user namespace', function(done){
     var user_socket = ioc(address + '/user', {multiplex: false});
 
-    user_socket.on('user_added', function(){
-      done();
-    });
-
     user_socket.on('connect', function(){
-      user_socket.emit('add');      
+      user_socket.emit('add', 'angl', function(err, data){
+        if (err) return done(err);
+        //emit once more
+        user_socket.emit('add', 'angl', function(err, data){
+          if (err) {
+            return done();
+          }
+        });
+        
+      });
     })
   });
 

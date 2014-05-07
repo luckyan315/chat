@@ -34,7 +34,10 @@ var redisClients = [];
     });
 redisClients.push(pub, sub);
 
+//global consts
 var myroom = 'baywalk';
+var users = exports.users = {};
+var nUsers = exports.nUsers = 0;
 
 app.use(express.static(__dirname + '/public'));
 
@@ -91,18 +94,20 @@ io.of('/user').on('connection', function(socket){
   var io_socket_field = 'rooms,id';
   debug(JSON.stringify(jsmask(socket, io_socket_field)));
 
-  // todo: public user api
-  socket.on('add', function(){
-    socket.emit('user_added');
+  socket.on('add', function(username, cb){
+    if(!socket.username) {
+      socket.username = username;
+      return cb && cb(null, 'add success');
+    }
+    cb && cb('user added');
   });
 
   socket.on('broadcast namespace', function(msg, ns){
     broadcast_namespace(msg, ns);
   });
 
-  //for testt
   socket.on('new message', function(data){
-    broadcast_namespace(data); 
+    broadcast_namespace(data);
   });  
 });
 
