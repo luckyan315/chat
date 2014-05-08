@@ -87,7 +87,6 @@
   });
 
   it('should reconnect by default', function(done){
-    // var socket = ioc(address);
     var socket = ioc(address, { reconnection: true , timeout: 20});
     //socket.io --> manager
     socket.io.engine.close();
@@ -97,7 +96,8 @@
   });
 
   it('should multi-reconnect avaiable ', function(done){
-    var mgr = ioc.Manager({ reconnection: true, timeout: 0, reconnectionAttempts: 2, reconnectionDelay: 50});
+    var nTimes = 3;
+    var mgr = ioc.Manager({ reconnection: true, timeout: 0, reconnectionAttempts: nTimes, reconnectionDelay: 50});
     var socket = mgr.socket('/');
     var nReconn = 0;
 
@@ -106,7 +106,7 @@
     });
 
     mgr.on('reconnect_failed', function(){
-      nReconn.should.be.eql(2);
+      nReconn.should.be.eql(nTimes);
       socket.close();
       done();
     });
@@ -137,13 +137,13 @@
         bEmitted = true;
         if (err) throw new Error(err);
          //emit once more
-        return user_socket.emit('add', 'angl', function(err, data){
+         return user_socket.emit('add', 'angl', function(err, data){
           if (err) {
-             return done();
-          }
-        });
-        
-      });
+           return done();
+         }
+       });
+         
+       });
     })
   });
 
@@ -306,12 +306,10 @@ it('should add/leave room ok', function(done){
       debug('[adapter.sids]: ', sids);
 
       var nLeftRoom = _.reduce(sids, function(result, num, key){
-              // debug('[ sids[key] ]', sids[key]);
-              if(sids[key][room_name] === true) result++;
-
-              // debug('[ result ]: ', result);
-              return result;
-            }, 0);
+        if(sids[key][room_name] === true) result++;
+        
+        return result;
+      }, 0);
 
       debug('[nLeftRoom]: ' + nLeftRoom + ' [nUsers]: ' + nUsers);
       if (nLeftRoom === nUsers) done();
@@ -348,8 +346,5 @@ it('should add multi users', function(done) {
       if(!err) done();
     });      
   });
-
-
 });
-
 });
