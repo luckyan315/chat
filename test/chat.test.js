@@ -79,26 +79,11 @@
   });
   
   it('should connect the server success', function(done){
-    // var user_socket = ioc(address + '/user');
-    // user_socket.on('connect', function(){
-    //   done();
-    // });
-
     var mgr = ioc.Manager(address + '/user');
     var user_socket = mgr.socket('/user');
     user_socket.on('connect', function(){
       done();
     });
-
-
-    // var mgr = ioc.Manager(address);
-    // var socket = mgr.socket();
-    // socket.on('connect', function(){
-    //   sio.eio.clientsCount.should.eql(1);
-
-    //   done();
-    //   // socket.close();      
-    // });
   });
 
   it('should reconnect by default', function(done){
@@ -109,16 +94,6 @@
     socket.io.on('reconnect', function() {
       done();
     });
-
-    socket.io.on('reconnect_attempt', function(){
-      debug('-------' + 'reconnectc_attempt  emitted......');
-    });
-
-    // socket.io.on('reconnect_error', function(err){
-    //   debug('----' + 'reconnect error emitted.....');
-    //   if (err) debug(err);
-    //   done();
-    // });
   });
 
 
