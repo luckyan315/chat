@@ -4,7 +4,7 @@
     "description": "chatting room via socket.io.pre2",
     "main": "chat.js",
     "scripts": {
-	"test" : "NODE_ENV=test DEBUG=engine:*,Chat:*,socket.io:* mocha -R spec test/*.test.js",
+	"test" : "NODE_ENV=test DEBUG=Chat:*,socket.io-client:*,socket.io:server,socket.io:client mocha -R spec test/*.test.js",
 	"start" : "NODE_ENV=development DEBUG=Chat:* node chat.js"
     },
     "dependencies" : {

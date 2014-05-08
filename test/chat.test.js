@@ -4,27 +4,27 @@
  * 
  */
 
-"use strict";
+ "use strict";
 
-var should = require('should');
-var request = require('supertest');
-var http = require('http');
-var ioc = require('socket.io-client');
-var async = require('async');
+ var should = require('should');
+ var request = require('supertest');
+ var http = require('http');
+ var ioc = require('socket.io-client');
+ var async = require('async');
 
-var debug = require('debug')('Chat:ServerTest');
-var _ = require('lodash');
+ var debug = require('debug')('Chat:ServerTest');
+ var _ = require('lodash');
 
-var chat = require('../chat.js');
-var app = chat.app;
-var sio = chat.io;
-var httpServer = chat.httpServer;
+ var chat = require('../chat.js');
+ var app = chat.app;
+ var sio = chat.io;
+ var httpServer = chat.httpServer;
 
-var config = require('../config');
-var host = config.test.host;
-var port = config.test.port;
+ var config = require('../config');
+ var host = config.test.host;
+ var port = config.test.port;
 
-describe('Chat Server', function(){
+ describe('Chat Server', function(){
   var server = null;
   var address = 'ws://' + host + ':' + port;
   var room_name = 'baywalk';
@@ -59,38 +59,68 @@ describe('Chat Server', function(){
   
   it('should got 200 status code when visit get /', function(done){
     request(app)
-      .get('/')
-      .expect(200, done);
+    .get('/')
+    .expect(200, done);
   });
 
   it('should work as a static server', function(done){
     request(app)
-      .get('/index.html')
-      .expect(200, done);
+    .get('/index.html')
+    .expect(200, done);
   });
 
   it('should "Not Found(404)"if there is not static file', function(done){
     request(app)
-      .get('/xxx.html')
-      .expect(404)
-      .end(function(err, res){
-        done();
-      });
+    .get('/xxx.html')
+    .expect(404)
+    .end(function(err, res){
+      done();
+    });
   });
   
   it('should connect the server success', function(done){
+    // var user_socket = ioc(address + '/user');
+    // user_socket.on('connect', function(){
+    //   done();
+    // });
 
-    var sockets = ioc(address);
-    sockets.on('connect', function(client){
-      sio.eio.clientsCount.should.eql(1);
+    var mgr = ioc.Manager(address + '/user');
+    var user_socket = mgr.socket('/user');
+    user_socket.on('connect', function(){
       done();
     });
 
-    sockets.on('error', function(err){
-      debug('[Error] ' , err);
-      done(err);
-    });
+
+    // var mgr = ioc.Manager(address);
+    // var socket = mgr.socket();
+    // socket.on('connect', function(){
+    //   sio.eio.clientsCount.should.eql(1);
+
+    //   done();
+    //   // socket.close();      
+    // });
   });
+
+  it('should reconnect by default', function(done){
+    // var socket = ioc(address);
+    var socket = ioc(address, { reconnection: true , timeout: 20 });
+    //socket.io --> manager
+    socket.io.engine.close();
+    socket.io.on('reconnect', function() {
+      done();
+    });
+
+    socket.io.on('reconnect_attempt', function(){
+      debug('-------' + 'reconnectc_attempt  emitted......');
+    });
+
+    // socket.io.on('reconnect_error', function(err){
+    //   debug('----' + 'reconnect error emitted.....');
+    //   if (err) debug(err);
+    //   done();
+    // });
+  });
+
 
   it('should access /private ', function(done){
     var pri_socket = ioc(address + '/private', { multiplex: false });
@@ -169,10 +199,10 @@ describe('Chat Server', function(){
     });
   });
 
-  it('should sio broadcast all namespace ok', function(done){
-    var user_socket = ioc(address + '/user', { multiplex: false });
-    var pri_socket = ioc(address + '/private', { multiplex: false });
-    var nRecv = 0;
+it('should sio broadcast all namespace ok', function(done){
+  var user_socket = ioc(address + '/user', { multiplex: false });
+  var pri_socket = ioc(address + '/private', { multiplex: false });
+  var nRecv = 0;
     var nExp = 2; // expect result
 
     pri_socket.on('new message', function(data){
@@ -195,44 +225,44 @@ describe('Chat Server', function(){
 
   });
 
-  it('should sio sockets broadcast a specified room ok', function(done){
-    var user1 = ioc(address, { multiplex: false });
-    var user2 = ioc(address, { multiplex: false });
-    var user3 = ioc(address, { multiplex: false });
-    var nRecv = 0;
+it('should sio sockets broadcast a specified room ok', function(done){
+  var user1 = ioc(address, { multiplex: false });
+  var user2 = ioc(address, { multiplex: false });
+  var user3 = ioc(address, { multiplex: false });
+  var nRecv = 0;
 
-    user1.on('new message', function(data){
-      debug('[user1] recv msg: ' + data);
-      nRecv++;
-      if (nRecv === 2) done();
-    });
-
-    user2.on('new message', function(data){
-      debug('[user2] recv msg: ' + data);
-      nRecv++;
-      if (nRecv === 2) done();      
-    });
-
-    user3.on('new message', function(data){
-      debug('[user3] recv msg: ' + data);
-      done(new Error('Should not recv msg by self'));
-    });
-
-
-    user1.emit('join room', room_name);
-    user2.emit('join room', room_name);
-    user3.emit('join room', room_name, function(){
-      user3.emit('broadcast room', 'hi all room', room_name);
-    });
-
+  user1.on('new message', function(data){
+    debug('[user1] recv msg: ' + data);
+    nRecv++;
+    if (nRecv === 2) done();
   });
 
-  it('should sio sockets broadcast multi-room', function(done){
-    var user1 = ioc(address, { multiplex: false });
-    var user2 = ioc(address, { multiplex: false });
-    var user3 = ioc(address, { multiplex: false });
-    var user4 = ioc(address, { multiplex: false });
-    var nRecv = 0;
+  user2.on('new message', function(data){
+    debug('[user2] recv msg: ' + data);
+    nRecv++;
+    if (nRecv === 2) done();      
+  });
+
+  user3.on('new message', function(data){
+    debug('[user3] recv msg: ' + data);
+    done(new Error('Should not recv msg by self'));
+  });
+
+
+  user1.emit('join room', room_name);
+  user2.emit('join room', room_name);
+  user3.emit('join room', room_name, function(){
+    user3.emit('broadcast room', 'hi all room', room_name);
+  });
+
+});
+
+it('should sio sockets broadcast multi-room', function(done){
+  var user1 = ioc(address, { multiplex: false });
+  var user2 = ioc(address, { multiplex: false });
+  var user3 = ioc(address, { multiplex: false });
+  var user4 = ioc(address, { multiplex: false });
+  var nRecv = 0;
     var nExp = 3; //expect result
 
     user1.on('new message', function(data){
@@ -268,69 +298,69 @@ describe('Chat Server', function(){
 
   })
 
-  it('should add/leave room ok', function(done){
-    var user1 = ioc(address, { multiplex: false });
-    var user2 = ioc(address, { multiplex: false });
-    var user3 = ioc(address, { multiplex: false });
-    var nUsers = 0;
-    
-    user1.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
-    user2.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
-    user3.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
+it('should add/leave room ok', function(done){
+  var user1 = ioc(address, { multiplex: false });
+  var user2 = ioc(address, { multiplex: false });
+  var user3 = ioc(address, { multiplex: false });
+  var nUsers = 0;
 
-    function user_leave(){
-      debug('one user leaving the room....' + room_name);
+  user1.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
+  user2.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
+  user3.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
 
-      user1.emit('leave room', room_name, function(){
-        --nUsers;
-        var sids = sio.sockets.adapter.sids;
-        debug('[adapter.sids]: ', sids);
+  function user_leave(){
+    debug('one user leaving the room....' + room_name);
 
-            var nLeftRoom = _.reduce(sids, function(result, num, key){
+    user1.emit('leave room', room_name, function(){
+      --nUsers;
+      var sids = sio.sockets.adapter.sids;
+      debug('[adapter.sids]: ', sids);
+
+      var nLeftRoom = _.reduce(sids, function(result, num, key){
               // debug('[ sids[key] ]', sids[key]);
               if(sids[key][room_name] === true) result++;
 
               // debug('[ result ]: ', result);
               return result;
             }, 0);
-        
-        debug('[nLeftRoom]: ' + nLeftRoom + ' [nUsers]: ' + nUsers);
-        if (nLeftRoom === nUsers) done();
-      });
-    }
-  });
 
-  it('should add multi users', function(done) {
-    var user1 = ioc(address + '/user', { multiplex: false });
-    var user2 = ioc(address + '/user', { multiplex: false });
-    var user3 = ioc(address + '/user', { multiplex: false });
-    var bEmitted = false;
-
-    sio.of('/user').on('connection', function(){
-      if (bEmitted) return;
-      async.series({
-        one: function(cb){
-          user1.emit('add', 'user1', function(err, data){
-            bEmitted = true;
-            cb(err, data);
-          });
-        },
-        two: function(cb){
-          user2.emit('add', 'user2', function(err, data){
-            cb(err, data);
-          });
-        },
-        three: function(cb){
-          user3.emit('add', 'user3', function(err, data){
-            cb(err, data);
-          });
-        }
-      }, function(err, result){
-        if(!err) done();
-      });      
+      debug('[nLeftRoom]: ' + nLeftRoom + ' [nUsers]: ' + nUsers);
+      if (nLeftRoom === nUsers) done();
     });
+  }
+});
 
-    
+it('should add multi users', function(done) {
+  var user1 = ioc(address + '/user', { multiplex: false });
+  var user2 = ioc(address + '/user', { multiplex: false });
+  var user3 = ioc(address + '/user', { multiplex: false });
+  var bEmitted = false;
+
+  sio.of('/user').on('connection', function(){
+    if (bEmitted) return;
+    async.series({
+      one: function(cb){
+        user1.emit('add', 'user1', function(err, data){
+          bEmitted = true;
+          cb(err, data);
+        });
+      },
+      two: function(cb){
+        user2.emit('add', 'user2', function(err, data){
+          cb(err, data);
+        });
+      },
+      three: function(cb){
+        user3.emit('add', 'user3', function(err, data){
+          cb(err, data);
+        });
+      }
+    }, function(err, result){
+      if(!err) done();
+    });      
   });
+
+
+});
 
 });
