@@ -88,7 +88,7 @@
 
   it('should reconnect by default', function(done){
     // var socket = ioc(address);
-    var socket = ioc(address, { reconnection: true , timeout: 20 });
+    var socket = ioc(address, { reconnection: true , timeout: 20});
     //socket.io --> manager
     socket.io.engine.close();
     socket.io.on('reconnect', function() {
@@ -96,6 +96,22 @@
     });
   });
 
+  it('should multi-reconnect avaiable ', function(done){
+    var mgr = ioc.Manager({ reconnection: true, timeout: 0, reconnectionAttempts: 2, reconnectionDelay: 50});
+    var socket = mgr.socket('/');
+    var nReconn = 0;
+
+    mgr.on('reconnect_attempt', function(){
+      nReconn++;
+    });
+
+    mgr.on('reconnect_failed', function(){
+      nReconn.should.be.eql(2);
+      socket.close();
+      done();
+    });
+
+  });
 
   it('should access /private ', function(done){
     var pri_socket = ioc(address + '/private', { multiplex: false });
@@ -120,12 +136,10 @@
       user_socket.emit('add', 'angl', function(err, data){
         bEmitted = true;
         if (err) throw new Error(err);
-        debug('--------------------', data);
-        //emit once more
+         //emit once more
         return user_socket.emit('add', 'angl', function(err, data){
           if (err) {
-            debug('', 'xxxxxxxxxxxxxxxxxxxxx', err, data);
-            return done();
+             return done();
           }
         });
         
