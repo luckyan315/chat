@@ -82,19 +82,32 @@
     // var mgr = ioc.Manager(address + '/user');
     var user_socket = ioc(address + '/user', { transports: ['websocket'] });
     user_socket.on('connect', function(){
-
+      user_socket.io.engine.close();
       done();
     });
   });
 
   it.skip('should reconnect by default', function(done){
-    // this.timeout(5000);
-    var socket = ioc(address, { transports: ['websocket'], timeout: 10 });
+    // this.timeout(25000);
+    // Default ioc reconnect timeout = 20000;
+    var socket = ioc(address, { transports: ['websocket'], reconnection: true, reconnectionAttemps: 5, reconnectionDelay: 10, timeout: 100});
     //socket.io --> manager
     socket.io.engine.close();
-    socket.io.on('reconnect', function() {
+    socket.io.on('reconnect', function(attempt) {
       done();
     });
+
+    socket.io.on('connect_error', function(data){
+      debug('[error]', data);
+    });
+
+    socket.io.on('reconnect_failed', function(){
+      debug('[reconnect failed]');
+    });
+
+    socket.io.on('connecct_timeout', function(timeout){
+      debug('[connect timeout]', timeout);
+    })
   });
 
 
@@ -110,7 +123,7 @@
 
     mgr.on('reconnect_failed', function(){
       nReconn.should.be.eql(nTimes);
-      socket.close();
+      socket.io.engine.close();
       done();
     });
 
@@ -121,11 +134,13 @@
 
     pri_socket.on('connect', function(){
       debug('successfully established a connection with the namespace');
+      pri_socket.io.engine.close();      
       done();
     });
 
     pri_socket.on('connect_failed', function(reason){
       debug('Unable to connect the namespace ', reason);
+      pri_socket.io.engine.close();      
       done(reason);
     });
   });
@@ -142,6 +157,7 @@
          //emit once more
          return user_socket.emit('add', 'angl', function(err, data){
           if (err) {
+          user_socket.io.engine.close();            
            return done();
          }
        });
@@ -159,6 +175,7 @@
     var bEmitted = false;
 
     pri_socket.on('new message', function(data){
+      pri_socket.io.engine.close();      
       done(new Error('/private should not recv msg!! ' + data));
     });
 
@@ -166,14 +183,20 @@
       nRecv++;
 
       debug('', '[ioc] [user2] recv msg nRecv: ' + nRecv);
-      if (nRecv === nExp) done();
+      if (nRecv === nExp) {
+        user2_socket.io.engine.close();      
+        done();
+      }
     });
 
     user1_socket.on('new message', function(data){
       nRecv++;
 
       debug('', '[ioc] [user1] recv msg nRecv: ' + nRecv);
-      if (nRecv === nExp) done();
+      if (nRecv === nExp){
+         user1_socket.io.engine.close();        
+        done();
+      }
     });
 
     sio.of('/user').on('connection', function(socket){
@@ -195,27 +218,33 @@ it('should sio broadcast all namespace ok', function(done){
   var user_socket = ioc(address + '/user', { transports: ['websocket'], multiplex: false });
   var pri_socket = ioc(address + '/private', { transports: ['websocket'], multiplex: false });
   var nRecv = 0;
-    var nExp = 2; // expect result
+  var nExp = 2; // expect result
+  var bEmitted = false;
 
-    pri_socket.on('new message', function(data){
-      nRecv++;
+  pri_socket.on('new message', function(data){
+    nRecv++;
 
-      debug('', '[ioc] recv msg nRecv: ' + nRecv);
-      if(nRecv === nExp) done();
-    });
-
-    user_socket.on('new message', function(data){
-      nRecv++;
-
-      debug('', '[ioc] recv msg nRecv: ' + nRecv);
-      if(nRecv === nExp) done();
-    });
-
-    sio.of('/user').on('connection', function(socket){
-      user_socket.emit('broadcast namespace', 'hi all namespace');
-    });
-
+    debug('', '[ioc] recv msg nRecv: ' + nRecv);
+    if(nRecv === nExp) done();
+    pri_socket.io.engine.close();
   });
+
+  user_socket.on('new message', function(data){
+    nRecv++;
+
+    debug('', '[ioc] recv msg nRecv: ' + nRecv);
+    if(nRecv === nExp) done();
+
+    user_socket.io.engine.close();    
+  });
+
+  sio.of('/user').on('connection', function(socket){
+    if (bEmitted) return;    
+    user_socket.emit('broadcast namespace', 'hi all namespace');
+    bEmitted = true;
+  });
+
+});
 
 it('should sio sockets broadcast a specified room ok', function(done){
   var user1 = ioc(address, { transports: ['websocket'], multiplex: false });
@@ -226,17 +255,20 @@ it('should sio sockets broadcast a specified room ok', function(done){
   user1.on('new message', function(data){
     debug('[user1] recv msg: ' + data);
     nRecv++;
-    if (nRecv === 2) done();
+    if (nRecv === 2) done();      
+    user1.io.engine.close();
   });
 
   user2.on('new message', function(data){
     debug('[user2] recv msg: ' + data);
     nRecv++;
-    if (nRecv === 2) done();      
+    if (nRecv === 2) done(); 
+    user1.io.engine.close();
   });
 
   user3.on('new message', function(data){
     debug('[user3] recv msg: ' + data);
+    user3.io.engine.close();
     done(new Error('Should not recv msg by self'));
   });
 
@@ -261,17 +293,20 @@ it('should sio sockets broadcast multi-room', function(done){
       debug('[user1] recv msg: ' + data);
       nRecv++;
       if (nRecv === nExp) done();
+      user1.io.engine.close();
     });
 
     user2.on('new message', function(data){
       debug('[user2] recv msg: ' + data);
       nRecv++;
       if (nRecv === nExp) done();
+      user2.io.engine.close();
     });
 
     user3.on('new message', function(data){
       debug('[user3] recv msg: ' + data);
       done(new Error('Should not recv msg by self'));
+      user3.io.engine.close();
     });
 
     // Not join a specified room, just default room
@@ -280,6 +315,7 @@ it('should sio sockets broadcast multi-room', function(done){
       debug('[user4] recv msg: ' + data);
       nRecv++;
       if (nRecv === nExp) done();
+      user4.io.engine.close();
     });
 
     user1.emit('join room', 'room1');
@@ -315,7 +351,13 @@ it('should add/leave room ok', function(done){
       }, 0);
 
       debug('[nLeftRoom]: ' + nLeftRoom + ' [nUsers]: ' + nUsers);
-      if (nLeftRoom === nUsers) done();
+      if (nLeftRoom === nUsers) {
+        user1.io.engine.close();
+        user2.io.engine.close();
+        user3.io.engine.close();
+
+        done();        
+      }
     });
   }
 });
@@ -346,7 +388,13 @@ it('should add multi users', function(done) {
         });
       }
     }, function(err, result){
-      if(!err) done();
+      if(!err) {
+        user1.io.engine.close();
+        user2.io.engine.close();
+        user3.io.engine.close();
+
+        done();        
+      }
     });      
   });
 });

@@ -29,7 +29,7 @@ var redisClients = [];
     { 
       host : 'localhost',
       port : 6379,
-      // key : 'wkrldi',
+      key : 'wkrldi',
       transports : ['websocket'],
       adapter: redisAdapter({ pubClient: pub, subclient: sub })
     });
@@ -69,7 +69,10 @@ io.use(function(socket, next){
 });
 
 io.on('connection', function(socket) {
-  debug('New client is connected...');
+  debug('' ,
+    ' New client is connected...' + 
+    ' [id]: ' + socket.id + 
+    ' [nsp]: ' , socket.nsp.name);
 
   socket.on('join room', function(room, cb){
     debug('user: ' + socket.id + ' Join Room....:' + room);
