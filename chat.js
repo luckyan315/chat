@@ -7,7 +7,7 @@
 "use strict";
 
 var express = require('express');
-var debug = require('debug')('Chat:app');
+var debug = require('debug')('chat:app');
 var config = require('./config');
 var port = config.dev.port;
 
@@ -29,7 +29,8 @@ var redisClients = [];
     { 
       host : 'localhost',
       port : 6379,
-      key : 'wkrldi',
+      // key : 'wkrldi',
+      transports : ['websocket'],
       adapter: redisAdapter({ pubClient: pub, subclient: sub })
     });
 redisClients.push(pub, sub);

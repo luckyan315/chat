@@ -12,7 +12,7 @@
  var ioc = require('socket.io-client');
  var async = require('async');
 
- var debug = require('debug')('Chat:ServerTest');
+ var debug = require('debug')('chat:test');
  var _ = require('lodash');
 
  var chat = require('../chat.js');
@@ -79,15 +79,17 @@
   });
   
   it('should connect the server success', function(done){
-    var mgr = ioc.Manager(address + '/user');
-    var user_socket = mgr.socket('/user');
+    // var mgr = ioc.Manager(address + '/user');
+    var user_socket = ioc(address + '/user', { transports: ['websocket'] });
     user_socket.on('connect', function(){
+
       done();
     });
   });
 
-  it('should reconnect by default', function(done){
-    var socket = ioc(address, { reconnection: true , timeout: 20});
+  it.skip('should reconnect by default', function(done){
+    // this.timeout(5000);
+    var socket = ioc(address, { transports: ['websocket'], timeout: 10 });
     //socket.io --> manager
     socket.io.engine.close();
     socket.io.on('reconnect', function() {
@@ -95,9 +97,10 @@
     });
   });
 
+
   it('should multi-reconnect avaiable ', function(done){
     var nTimes = 3;
-    var mgr = ioc.Manager({ reconnection: true, timeout: 0, reconnectionAttempts: nTimes, reconnectionDelay: 50});
+    var mgr = ioc.Manager({ transports: ['websocket'], reconnection: true, timeout: 0, reconnectionAttempts: nTimes, reconnectionDelay: 50});
     var socket = mgr.socket('/');
     var nReconn = 0;
 
@@ -114,7 +117,7 @@
   });
 
   it('should access /private ', function(done){
-    var pri_socket = ioc(address + '/private', { multiplex: false });
+    var pri_socket = ioc(address + '/private', {  transports: ['websocket'], multiplex: false });
 
     pri_socket.on('connect', function(){
       debug('successfully established a connection with the namespace');
@@ -128,7 +131,7 @@
   });
 
   it('should do add action via /user namespace', function(done){
-    var user_socket = ioc(address + '/user', {multiplex: false});
+    var user_socket = ioc(address + '/user', { transports: ['websocket'], multiplex: false});
     var bEmitted = false;
     
     user_socket.on('connect', function(){
@@ -148,9 +151,9 @@
   });
 
   it('should sio broadcast specified namespace sockets', function(done){
-    var user1_socket = ioc(address + '/user', { multiplex: false });
-    var user2_socket = ioc(address + '/user', { multiplex: false });
-    var pri_socket = ioc(address + '/private', { multiplex: false });
+    var user1_socket = ioc(address + '/user', { transports: ['websocket'], multiplex: false });
+    var user2_socket = ioc(address + '/user', { transports: ['websocket'], multiplex: false });
+    var pri_socket = ioc(address + '/private', { transports: ['websocket'], multiplex: false });
     var nRecv = 0;
     var nExp = 2;
     var bEmitted = false;
@@ -189,8 +192,8 @@
   });
 
 it('should sio broadcast all namespace ok', function(done){
-  var user_socket = ioc(address + '/user', { multiplex: false });
-  var pri_socket = ioc(address + '/private', { multiplex: false });
+  var user_socket = ioc(address + '/user', { transports: ['websocket'], multiplex: false });
+  var pri_socket = ioc(address + '/private', { transports: ['websocket'], multiplex: false });
   var nRecv = 0;
     var nExp = 2; // expect result
 
@@ -215,9 +218,9 @@ it('should sio broadcast all namespace ok', function(done){
   });
 
 it('should sio sockets broadcast a specified room ok', function(done){
-  var user1 = ioc(address, { multiplex: false });
-  var user2 = ioc(address, { multiplex: false });
-  var user3 = ioc(address, { multiplex: false });
+  var user1 = ioc(address, { transports: ['websocket'], multiplex: false });
+  var user2 = ioc(address, { transports: ['websocket'], multiplex: false });
+  var user3 = ioc(address, { transports: ['websocket'], multiplex: false });
   var nRecv = 0;
 
   user1.on('new message', function(data){
@@ -247,10 +250,10 @@ it('should sio sockets broadcast a specified room ok', function(done){
 });
 
 it('should sio sockets broadcast multi-room', function(done){
-  var user1 = ioc(address, { multiplex: false });
-  var user2 = ioc(address, { multiplex: false });
-  var user3 = ioc(address, { multiplex: false });
-  var user4 = ioc(address, { multiplex: false });
+  var user1 = ioc(address, { transports: ['websocket'], multiplex: false });
+  var user2 = ioc(address, { transports: ['websocket'], multiplex: false });
+  var user3 = ioc(address, { transports: ['websocket'], multiplex: false });
+  var user4 = ioc(address, { transports: ['websocket'], multiplex: false });
   var nRecv = 0;
     var nExp = 3; //expect result
 
@@ -288,9 +291,9 @@ it('should sio sockets broadcast multi-room', function(done){
   })
 
 it('should add/leave room ok', function(done){
-  var user1 = ioc(address, { multiplex: false });
-  var user2 = ioc(address, { multiplex: false });
-  var user3 = ioc(address, { multiplex: false });
+  var user1 = ioc(address, { transports: ['websocket'], multiplex: false });
+  var user2 = ioc(address, { transports: ['websocket'], multiplex: false });
+  var user3 = ioc(address, { transports: ['websocket'], multiplex: false });
   var nUsers = 0;
 
   user1.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
@@ -318,9 +321,9 @@ it('should add/leave room ok', function(done){
 });
 
 it('should add multi users', function(done) {
-  var user1 = ioc(address + '/user', { multiplex: false });
-  var user2 = ioc(address + '/user', { multiplex: false });
-  var user3 = ioc(address + '/user', { multiplex: false });
+  var user1 = ioc(address + '/user', { transports: ['websocket'], multiplex: false });
+  var user2 = ioc(address + '/user', { transports: ['websocket'], multiplex: false });
+  var user3 = ioc(address + '/user', { transports: ['websocket'], multiplex: false });
   var bEmitted = false;
 
   sio.of('/user').on('connection', function(){
