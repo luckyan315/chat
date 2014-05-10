@@ -80,8 +80,8 @@ describe('Chat Server', function(){
   
   it('should connect the server success', function(done){
     // var mgr = ioc.Manager(address + '/user');
-        var user_socket = ioc(address + '/user', { transports: ['websocket'] });
-    user_socket.on('connect', function(){
+    var user_socket = ioc(address + '/user', { transports: ['websocket'] });
+    user_socket.once('connect', function(){
       user_socket.io.engine.close();
       done();
     });
@@ -132,16 +132,10 @@ describe('Chat Server', function(){
   it('should access /private ', function(done){
     var pri_socket = ioc(address + '/private', {  transports: ['websocket'], multiplex: false });
 
-    pri_socket.on('connect', function(){
+    pri_socket.once('connect', function(){
       debug('successfully established a connection with the namespace');
-      pri_socket.io.engine.close();      
+      pri_socket.io.engine.close();
       done();
-    });
-
-    pri_socket.on('connect_failed', function(reason){
-      debug('Unable to connect the namespace ', reason);
-      pri_socket.io.engine.close();      
-      done(reason);
     });
   });
 
@@ -337,7 +331,7 @@ describe('Chat Server', function(){
     user3.emit('join room', room_name, function(){ nUsers++; if(nUsers === 3) user_leave();});
 
         function user_leave(){
-          debug('one user leaving the room....' + room_name);
+          debug('','one user leaving the room....' + room_name);
 
           user1.emit('leave room', room_name, function(){
             --nUsers;
@@ -352,10 +346,10 @@ describe('Chat Server', function(){
 
             debug('[nLeftRoom]: ' + nLeftRoom + ' [nUsers]: ' + nUsers);
                 if (nLeftRoom === nUsers) {
-                  user1.io.engine.close();
-                      user2.io.engine.close();
-                  user3.io.engine.close();
 
+                  user1.io.engine.close();
+                  user2.io.engine.close();
+                  user3.io.engine.close();
                   done();        
                 }
           });
@@ -398,5 +392,42 @@ describe('Chat Server', function(){
       });      
     });
   });
+  
+  it('pingpong test between users in a room', function(done){
+    var user1 = ioc(address, { transports: ['websocket'], multiplex: false });
+    var user2 = ioc(address, { transports: ['websocket'], multipolex: false });
+    var room_name = 'baywalk2';
+    
+    user1.on('new message', function(data){
+      debug('', 'user1 recv msg: ' + data);
+      if(data === 'pong') {
+        user1.io.engine.close();
+        user2.io.engine.close();
+        done();
+      }
+    });
+
+    user2.on('new message', function(data){
+      debug('', 'user2 recv msg: ' + data);
+      if(data === 'ping') user2.emit('broadcast room', 'pong', room_name);
+    });
+    
+    user1.on('connect', function(){
+      debug('' , 'user1 connected');
+      
+      user1.emit('join room', room_name, function(){
+        user2.emit('join room', room_name, function(){
+          user1.emit('broadcast room', 'ping', room_name);
+        });      
+      });
+
+    });
+    
+
+
+    
+    
+  });
+
   
 });
