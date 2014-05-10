@@ -2,10 +2,10 @@ TIMEOUT = 5000
 SLOW = 500
 MOCHA_OPTS = --compilers coffee:coffee-script/register --timeout $(TIMEOUT) --slow $(SLOW)
 TESTS = $(shell find ./test/* -name "*.test.coffee")
-REPORTER = dot
+REPORTER = spec
 
 test:
-	@DEBUG=* ./node_modules/.bin/mocha \
+	@NODE_ENV=test DEBUG=socket.io-client:*,chat:*,socket.js ./node_modules/.bin/mocha \
 		--reporter $(REPORTER) \
 		--slow 200ms \
 		--bail
