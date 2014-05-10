@@ -26,7 +26,7 @@ var port = config.test.port;
 
 describe('Chat Server', function(){
   var server = null;
-      var address = 'ws://' + host + ':' + port;
+  var address = 'ws://' + host + ':' + port;
   var room_name = 'baywalk';
 
   debug('[address]: ' + address);
@@ -115,7 +115,7 @@ describe('Chat Server', function(){
     var nTimes = 3;
     var mgr = ioc.Manager({ transports: ['websocket'], reconnection: true, timeout: 0, reconnectionAttempts: nTimes, reconnectionDelay: 50});
     var socket = mgr.socket('/');
-        var nReconn = 0;
+    var nReconn = 0;
 
     mgr.on('reconnect_attempt', function(){
       nReconn++;
@@ -211,7 +211,7 @@ describe('Chat Server', function(){
   it('should sio broadcast all namespace ok', function(done){
     var user_socket = ioc(address + '/user', { transports: ['websocket'], multiplex: false });
     var pri_socket = ioc(address + '/private', { transports: ['websocket'], multiplex: false });
-        var nRecv = 0;
+    var nRecv = 0;
     var nExp = 2; // expect result
     var bEmitted = false;
 
@@ -266,7 +266,6 @@ describe('Chat Server', function(){
       done(new Error('Should not recv msg by self'));
     });
 
-
     user1.emit('join room', room_name);
     user2.emit('join room', room_name);
     user3.emit('join room', room_name, function(){
@@ -318,8 +317,8 @@ describe('Chat Server', function(){
       user3.emit('broadcast room', 'hi all');
     });
 
-      })
-
+  })
+  
   it('should add/leave room ok', function(done){
     var user1 = ioc(address, { transports: ['websocket'], multiplex: false });
     var user2 = ioc(address, { transports: ['websocket'], multiplex: false });
@@ -420,14 +419,8 @@ describe('Chat Server', function(){
           user1.emit('broadcast room', 'ping', room_name);
         });      
       });
-
     });
     
-
-
-    
-    
-  });
-
+  });/* end of ping-pong */
   
 });
