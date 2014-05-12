@@ -18,22 +18,20 @@ var http = require('http');
 var httpServer = exports.httpServer = http.createServer(app);
 
 var redis = require('redis');
-var pub = redis.createClient();
-var sub = redis.createClient(null, null, {detect_buffers: true});
 var redisAdapter = require('socket.io-redis'); 
 
-var redisClients = [];
-    var io = exports.io = 
+var io = exports.io = 
   require('socket.io')(
     httpServer, 
     { 
-      host : 'localhost',
-      port : 6379,
       key : 'wkrldi',
       transports : ['websocket'],
-      adapter: redisAdapter({ pubClient: pub, subclient: sub })
+      adapter: redisAdapter(
+        {
+          host : 'localhost',
+          port : 6379
+        })
     });
-redisClients.push(pub, sub);
 
 //global consts
 var myroom = 'baywalk';
@@ -134,11 +132,6 @@ io.on('error', function(err){
 process.on('uncaughtException', function(err) {
   debug(err);
   debug(err.stack);
-
-  // cleanup session, quit elegantly
-  redisClients.forEach(function(client){
-    client.quit();
-  });
 
   throw err;
 });
