@@ -46,7 +46,7 @@ app.get('/', function(req, res){
 
 if (process.env.NODE_ENV !== 'test') {
   httpServer.listen(port, function(){
-    debug('Chatting server is listening port on %d', port);
+    console.log('Chatting server is listening port on %d', port);
   });
 }
 
