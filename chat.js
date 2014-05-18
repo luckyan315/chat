@@ -72,6 +72,10 @@ io.on('connection', function(socket) {
     ' [id]: ' + socket.id + 
     ' [nsp]: ' , socket.nsp.name);
 
+  socket.on('message', function(msg){
+    debug('user: ' + socket.id + ' recv msg: ' + msg);
+  });
+  
   socket.on('join room', function(room, cb){
     debug('user: ' + socket.id + ' Join Room....:' + room);
     socket.join(room, cb);
