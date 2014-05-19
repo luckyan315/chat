@@ -25,7 +25,7 @@ var io = exports.io =
     httpServer, 
     { 
       key : 'wkrldi',
-      // transports : ['websocket'],
+      transports : ['websocket'],
       adapter: redisAdapter(
         {
           host : 'localhost',
