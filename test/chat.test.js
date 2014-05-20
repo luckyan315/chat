@@ -78,7 +78,7 @@ describe('Chat Server', function(){
       });
   });
   
-  it.only('should connect the server success', function(done){
+  it('should connect the server success', function(done){
     // var mgr = ioc.Manager(address + '/user');
     var user_socket = ioc(address + '/user', { transports: ['websocket'] });
     user_socket.once('connect', function(){
