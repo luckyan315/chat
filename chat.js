@@ -93,6 +93,12 @@ io.on('connection', function(socket) {
   socket.on('disconnect', function(){
     debug('A client disconnected...');
   });
+
+  // ytx ping pong
+  socket.on('ask', function(msg){
+    socket.emit('answer', msg);
+  })
+
 });
 
 io.of('/user').on('connection', function(socket){
