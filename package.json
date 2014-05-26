@@ -1,6 +1,6 @@
 {
     "name": "imsvr",
-    "version": "0.0.1",
+    "version": "0.1",
     "description": "chatting room via socket.io.pre4",
     "main": "chat.js",
     "scripts": {
