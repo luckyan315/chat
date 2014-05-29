@@ -1,7 +1,7 @@
 {
     "name": "imsvr",
     "version": "0.1.0",
-    "description": "chatting room via socket.io.pre4",
+    "description": "chatting room via socket.io",
     "main": "chat.js",
     "scripts": {
 	"test" : "make test",
@@ -9,8 +9,8 @@
     },
     "dependencies" : {
 	"express" : "3.4.8",
-	"socket.io" : "1.0.0-pre4",
-	"socket.io-client" : "1.0.0-pre4",
+	"socket.io" : "1.0.2",
+	"socket.io-client" : "1.0.2",
 	"socket.io-redis" : "0.1.1",
 	"async" : "0.8.0",
   "redis" : "0.10.1",
