@@ -15,7 +15,7 @@ var async = require('async');
 var debug = require('debug')('chat:test');
 var _ = require('lodash');
 
-var chat = require('../chat.js');
+var chat = require('../server.js');
 var app = chat.app;
 var sio = chat.io;
 var httpServer = chat.httpServer;
