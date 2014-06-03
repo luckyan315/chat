@@ -1,3 +1,4 @@
+
 {
     "name": "imsvr",
     "version": "0.0.1",
@@ -5,7 +6,7 @@
     "main": "chat.js",
     "scripts": {
 	"test" : "make test",
-	"start" : "NODE_ENV=development DEBUG=Chat:chat:*, socket.io-client:* node chat.js"
+	"start" : "DEBUG=chat:* node chat.js"
     },
     "dependencies" : {
 	"express" : "3.4.8",
