@@ -1,7 +1,7 @@
 chat
 ====
 
-a simple chatting room via latest socket.io(1.0.2)
+a simple chatting room via latest socket.io(1.0.6)
 
 sio & ioc 0.9.* VS pre4
 ====
